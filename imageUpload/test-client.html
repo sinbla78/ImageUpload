@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>프로필 이미지 업로드 테스트</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 16px;
+        }
+        .upload-section {
+            border: 3px dashed #e0e0e0;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin: 30px 0;
+            background: linear-gradient(45deg, #f8f9ff, #fff8f8);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-section:hover {
+            border-color: #007bff;
+            background: linear-gradient(45deg, #f0f8ff, #fff0f8);
+            transform: translateY(-2px);
+        }
+        .upload-section.dragover {
+            border-color: #007bff;
+            background: linear-gradient(45deg, #e7f3ff, #ffe7f3);
+        }
+        .user-input {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .user-input input {
+            padding: 12px 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            width: 300px;
+            max-width: 100%;
+        }
+        .user-input input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        button {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 8px;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,123,255,0.3);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .delete-btn {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+        }
+        .delete-btn:hover {
+            box-shadow: 0 4px 15px rgba(220,53,69,0.3);
+        }
+        .result {
+            margin: 25px 0;
+            padding: 20px;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+        .success {
+            background: linear-gradient(135deg, #d4edda, #c3e6cb);
+            color: #155724;
+            border: 2px solid #b8dabd;
+        }
+        .error {
+            background: linear-gradient(135deg, #f8d7da, #f5c6cb);
+            color: #721c24;
+            border: 2px solid #f1b0b7;
+        }
+        .preview {
+            max-width: 200px;
+            max-height: 200px;
+            margin: 20px auto;
+            display: block;
+            border-radius: 50%;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+            object-fit: cover;
+        }
+        .file-info {
+            background: linear-gradient(135deg, #e9ecef, #f8f9fa);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 20px 0;
+            border-left: 4px solid #007bff;
+        }
+        .progress {
+            width: 100%;
+            height: 8px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 15px 0;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #007bff, #0056b3);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .button-group {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .profile-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+        .profile-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .emoji {
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>👤 프로필 이미지 업로드 서버</h1>
+        <p>사용자 프로필 사진을 업로드하고 관리하세요</p>
+    </div>
+
+    <div class="user-input">
+        <input type="text" id="userIdInput" placeholder="사용자 ID 입력 (예: user123)" />
+    </div>
+
+    <div class="upload-section" id="uploadArea">
+        <div class="emoji">📸</div>
+        <p><strong>프로필 이미지를 드래그하여 놓거나 클릭하여 선택하세요</strong></p>
+        <p style="color: #666; font-size: 14px;">지원 형식: JPG, PNG, GIF, BMP, WEBP (최대 3MB)</p>
+        <p style="color: #999; font-size: 12px;">사용자당 하나의 프로필 이미지만 유지됩니다</p>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+
+    <div class="progress" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="fileInfo" class="file-info" style="display: none;"></div>
+
+    <div class="button-group">
+        <button onclick="uploadImage()" id="uploadBtn" disabled>📤 업로드</button>
+        <button onclick="clearSelection()" id="clearBtn" disabled>🗑️ 선택 해제</button>
+    </div>
+
+    <div class="profile-section">
+        <h3>🔍 프로필 이미지 조회</h3>
+        <div class="profile-actions">
+            <input type="text" id="searchUserId" placeholder="조회할 사용자 ID" style="margin-right: 10px;">
+            <button onclick="viewUserProfile()">👁️ 프로필 보기</button>
+            <button onclick="deleteUserProfile()" class="delete-btn">🗑️ 프로필 삭제</button>
+        </div>
+    </div>
+
+    <div id="result"></div>
+    <img id="preview" class="preview" style="display: none;">
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8080/api/profile';
+    let selectedFile = null;
+
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const result = document.getElementById('result');
+    const preview = document.getElementById('preview');
+    const fileInfo = document.getElementById('fileInfo');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const userIdInput = document.getElementById('userIdInput');
+
+    // 드래그 앤 드롭 이벤트
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('dragover', handleDragOver);
+    uploadArea.addEventListener('dragleave', handleDragLeave);
+    uploadArea.addEventListener('drop', handleDrop);
+    fileInput.addEventListener('change', handleFileSelect);
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    }
+
+    function handleDragLeave(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    }
+
+    function handleFileSelect(e) {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    }
+
+    function handleFile(file) {
+        selectedFile = file;
+
+        // 파일 정보 표시
+        fileInfo.innerHTML = `
+            <strong>📁 선택된 파일:</strong> ${file.name}<br>
+            <strong>📏 크기:</strong> ${formatFileSize(file.size)}<br>
+            <strong>🏷️ 타입:</strong> ${file.type}
+        `;
+        fileInfo.style.display = 'block';
+
+        // 미리보기 표시 (원형으로)
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+
+        uploadBtn.disabled = false;
+        clearBtn.disabled = false;
+        result.innerHTML = '';
+    }
+
+    function clearSelection() {
+        selectedFile = null;
+        fileInput.value = '';
+        fileInfo.style.display = 'none';
+        preview.style.display = 'none';
+        uploadBtn.disabled = true;
+        clearBtn.disabled = true;
+        result.innerHTML = '';
+        progressContainer.style.display = 'none';
+    }
+
+    async function uploadImage() {
+        if (!selectedFile) return;
+
+        const userId = userIdInput.value.trim();
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        if (userId) {
+            formData.append('userId', userId);
+        }
+
+        uploadBtn.disabled = true;
+        progressContainer.style.display = 'block';
+
+        // 가짜 프로그레스
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 30;
+            if (progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+        }, 100);
+
+        try {
+            const response = await fetch(`${API_BASE}/upload`, {
+                method: 'POST',
+                body: formData
+            });
+
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+
+            const data = await response.json();
+
+            if (data.success) {
+                result.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ 프로필 이미지 업로드 성공!</strong><br>
+                        파일명: ${data.fileName}<br>
+                        <a href="${API_BASE}/image/${data.fileName}" target="_blank">이미지 보기</a>
+                        ${userId ? `<br><a href="${API_BASE}/user/${userId}" target="_blank">사용자 프로필 보기</a>` : ''}
+                        <br><button onclick="deleteImage('${data.fileName}')" class="delete-btn" style="margin-top: 10px;">삭제</button>
+                    </div>
+                `;
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            clearInterval(progressInterval);
+            result.innerHTML = `
+                <div class="result error">
+                    <strong>❌ 업로드 실패!</strong><br>
+                    ${error.message}
+                </div>
+            `;
+        } finally {
+            uploadBtn.disabled = false;
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+            }, 1000);
+        }
+    }
+
+    async function viewUserProfile() {
+        const userId = document.getElementById('searchUserId').value.trim();
+        if (!userId) {
+            alert('사용자 ID를 입력해주세요.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/user/${userId}`);
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+
+                result.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ ${userId}님의 프로필 이미지</strong><br>
+                        <img src="${imageUrl}" class="preview" style="display: block;">
+                    </div>
+                `;
+            } else {
+                throw new Error('프로필 이미지를 찾을 수 없습니다.');
+            }
+        } catch (error) {
+            result.innerHTML = `
+                <div class="result error">
+                    <strong>❌ 조회 실패!</strong><br>
+                    ${error.message}
+                </div>
+            `;
+        }
+    }
+
+    async function deleteUserProfile() {
+        const userId = document.getElementById('searchUserId').value.trim();
+        if (!userId) {
+            alert('사용자 ID를 입력해주세요.');
+            return;
+        }
+
+        if (!confirm(`정말로 ${userId}님의 프로필 이미지를 삭제하시겠습니까?`)) return;
+
+        try {
+            const response = await fetch(`${API_BASE}/user/${userId}`, {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                result.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ 삭제 완료!</strong><br>
+                        ${data.message}
+                    </div>
+                `;
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            result.innerHTML = `
+                <div class="result error">
+                    <strong>❌ 삭제 실패!</strong><br>
+                    ${error.message}
+                </div>
+            `;
+        }
+    }
+
+    async function deleteImage(fileName) {
+        if (!confirm('정말로 이 이미지를 삭제하시겠습니까?')) return;
+
+        try {
+            const response = await fetch(`${API_BASE}/delete/${fileName}`, {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                result.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ 삭제 완료!</strong><br>
+                        ${data.message}
+                    </div>
+                `;
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            result.innerHTML = `
+                <div class="result error">
+                    <strong>❌ 삭제 실패!</strong><br>
+                    ${error.message}
+                </div>
+            `;
+        }
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    // 페이지 로드시 서버 상태 확인
+    window.addEventListener('load', async () => {
+        try {
+            const response = await fetch(`${API_BASE}/health`);
+            const data = await response.json();
+            console.log('✅ 서버 상태:', data.message);
+        } catch (error) {
+            console.log('❌ 서버 연결 실패:', error.message);
+        }
+    });
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이미지 업로드 테스트</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            background-color: #fafafa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-area:hover {
+            border-color: #007bff;
+            background-color: #f0f8ff;
+        }
+        .upload-area.dragover {
+            border-color: #007bff;
+            background-color: #e7f3ff;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .preview {
+            max-width: 300px;
+            max-height: 300px;
+            margin: 20px auto;
+            display: block;
+            border-radius: 5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .file-info {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .progress {
+            width: 100%;
+            height: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+            display: none;
+        }
+        .progress-bar {
+            height: 100%;
+            background-color: #007bff;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🖼️ 이미지 업로드 서버 테스트</h1>
+
+    <div class="upload-area" id="uploadArea">
+        <p>📁 이미지를 드래그하여 놓거나 클릭하여 선택하세요</p>
+        <p style="color: #666; font-size: 14px;">지원 형식: JPG, PNG, GIF, BMP, WEBP (최대 5MB)</p>
+    </div>
+
+    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+
+    <div class="progress" id="progressContainer">
+        <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="fileInfo" class="file-info" style="display: none;"></div>
+
+    <div style="text-align: center;">
+        <button onclick="uploadImage()" id="uploadBtn" disabled>📤 업로드</button>
+        <button onclick="clearSelection()" id="clearBtn" disabled>🗑️ 선택 해제</button>
+    </div>
+
+    <div id="result"></div>
+    <img id="preview" class="preview" style="display: none;">
+</div>
+
+<script>
+    const API_BASE = 'http://localhost:8080/api/images';
+    let selectedFile = null;
+
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const result = document.getElementById('result');
+    const preview = document.getElementById('preview');
+    const fileInfo = document.getElementById('fileInfo');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+
+    // 드래그 앤 드롭 이벤트
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('dragover', handleDragOver);
+    uploadArea.addEventListener('dragleave', handleDragLeave);
+    uploadArea.addEventListener('drop', handleDrop);
+    fileInput.addEventListener('change', handleFileSelect);
+
+    function handleDragOver(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    }
+
+    function handleDragLeave(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    }
+
+    function handleDrop(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            handleFile(files[0]);
+        }
+    }
+
+    function handleFileSelect(e) {
+        if (e.target.files.length > 0) {
+            handleFile(e.target.files[0]);
+        }
+    }
+
+    function handleFile(file) {
+        selectedFile = file;
+
+        // 파일 정보 표시
+        fileInfo.innerHTML = `
+            <strong>선택된 파일:</strong> ${file.name}<br>
+            <strong>크기:</strong> ${formatFileSize(file.size)}<br>
+            <strong>타입:</strong> ${file.type}
+        `;
+        fileInfo.style.display = 'block';
+
+        // 미리보기 표시
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+
+        uploadBtn.disabled = false;
+        clearBtn.disabled = false;
+        result.innerHTML = '';
+    }
+
+    function clearSelection() {
+        selectedFile = null;
+        fileInput.value = '';
+        fileInfo.style.display = 'none';
+        preview.style.display = 'none';
+        uploadBtn.disabled = true;
+        clearBtn.disabled = true;
+        result.innerHTML = '';
+        progressContainer.style.display = 'none';
+    }
+
+    async function uploadImage() {
+        if (!selectedFile) return;
+
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        uploadBtn.disabled = true;
+        progressContainer.style.display = 'block';
+
+        // 가짜 프로그레스 (실제 서버에서는 progress 이벤트 사용)
+        let progress = 0;
+        const progressInterval = setInterval(() => {
+            progress += Math.random() * 30;
+            if (progress > 90) progress = 90;
+            progressBar.style.width = progress + '%';
+        }, 100);
+
+        try {
+            const response = await fetch(`${API_BASE}/upload`, {
+                method: 'POST',
+                body: formData
+            });
+
+            clearInterval(progressInterval);
+            progressBar.style.width = '100%';
+
+            const data = await response.json();
+
+            if (data.success) {
+                result.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ 업로드 성공!</strong><br>
+                        파일명: ${data.fileName}<br>
+                        <a href="${API_BASE}/view/${data.fileName}" target="_blank">이미지 보기</a>
+                        <button onclick="deleteImage('${data.fileName}')" style="margin-left: 10px; background: #dc3545;">삭제</button>
+                    </div>
+                `;
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            clearInterval(progressInterval);
+            result.innerHTML = `
+                <div class="result error">
+                    <strong>❌ 업로드 실패!</strong><br>
+                    ${error.message}
+                </div>
+            `;
+        } finally {
+            uploadBtn.disabled = false;
+            setTimeout(() => {
+                progressContainer.style.display = 'none';
+                progressBar.style.width = '0%';
+            }, 1000);
+        }
+    }
+
+    async function deleteImage(fileName) {
+        if (!confirm('정말로 이미지를 삭제하시겠습니까?')) return;
+
+        try {
+            const response = await fetch(`${API_BASE}/delete/${fileName}`, {
+                method: 'DELETE'
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                result.innerHTML = `
+                    <div class="result success">
+                        <strong>✅ 삭제 완료!</strong><br>
+                        ${data.message}
+                    </div>
+                `;
+            } else {
+                throw new Error(data.message);
+            }
+        } catch (error) {
+            result.innerHTML = `
+                <div class="result error">
+                    <strong>❌ 삭제 실패!</strong><br>
+                    ${error.message}
+                </div>
+            `;
+        }
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+</script>
+</body>
+</html>
